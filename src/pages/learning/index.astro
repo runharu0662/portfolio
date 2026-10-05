@@ -1,0 +1,9 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ArticleCard from '../../components/ArticleCard.astro';
+import { learningEntries, categories } from '../../lib/content';
+import { href, categorySlug } from '../../lib/site';
+const entries = await learningEntries();
+const groups = categories(entries);
+---
+<BaseLayout title="Learning"><div class="page-heading"><p class="eyebrow">Study / Understand / Write</p><h1>Learning</h1><p class="intro">学び、試し、自分の言葉で整理する技術ノート。</p></div><nav class="category-nav" aria-label="学習カテゴリー">{groups.map(category => <a href={href(`learning/category/${categorySlug(category)}/`)}>{category}<span>{entries.filter(e => e.data.category === category).length}</span></a>)}</nav>{groups.map(category => <section class="category-section"><div class="section-heading"><h2><a href={href(`learning/category/${categorySlug(category)}/`)}>{category}</a></h2><span class="muted">{entries.filter(e => e.data.category === category).length} notes</span></div><div class="card-grid">{entries.filter(e => e.data.category === category).map(entry => <ArticleCard entry={entry}/>)}</div>{!entries.some(e => e.data.category === category) && <p class="empty-state">まだ記事はありません。</p>}</section>)}</BaseLayout>

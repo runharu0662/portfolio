@@ -1,0 +1,18 @@
+---
+import { render } from 'astro:content';
+import ArticleLayout from '../../layouts/ArticleLayout.astro';
+import { learningEntries } from '../../lib/content';
+import { href } from '../../lib/site';
+export async function getStaticPaths() {
+  const entries = await learningEntries();
+  return entries.map(entry => {
+    const peers = entries.filter(e => e.data.category === entry.data.category);
+    const index = peers.findIndex(e => e.id === entry.id);
+    const link = (e: typeof entry | undefined) => e && ({ title: e.data.title, url: href(`learning/${e.id}/`) });
+    return { params: { id: entry.id }, props: { entry, previous: link(peers[index - 1]), next: link(peers[index + 1]) } };
+  });
+}
+const { entry, previous, next } = Astro.props;
+const { Content, headings } = await render(entry);
+---
+<ArticleLayout {...entry.data} headings={headings} previous={previous} next={next}><Content/></ArticleLayout>

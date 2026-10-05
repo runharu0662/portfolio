@@ -1,0 +1,8 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { href, dateLabel } from '../lib/site';
+import Tag from './Tag.astro';
+interface Props { entry: CollectionEntry<'projects'>; heading?: 'h2' | 'h3' }
+const { entry, heading: Heading = 'h3' } = Astro.props;
+---
+<article class="card project-card"><div class="card-meta"><span>PROJECT</span><time datetime={dateLabel(entry.data.updated)}>{dateLabel(entry.data.updated)}</time></div><Heading><a href={href(`projects/${entry.id}/`)}>{entry.data.title} <span aria-hidden="true">↗</span></a></Heading><p>{entry.data.description}</p><div class="tags">{entry.data.tags.map(label => <Tag label={label}/>)}</div><div class="project-links">{entry.data.repository && <a href={entry.data.repository}>Repository ↗</a>}{entry.data.demo && <a href={entry.data.demo}>Demo ↗</a>}</div></article>

@@ -1,0 +1,12 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import ArticleCard from '../../../components/ArticleCard.astro';
+import { learningEntries, categories } from '../../../lib/content';
+import { href, categorySlug } from '../../../lib/site';
+export async function getStaticPaths() {
+  const entries = await learningEntries();
+  return categories(entries).map(category => ({ params: { category: categorySlug(category) }, props: { category, entries: entries.filter(e => e.data.category === category) } }));
+}
+const { category, entries } = Astro.props;
+---
+<BaseLayout title={`${category} | Learning`}><div class="page-heading"><a class="back-link" href={href('learning/')}>← Learning</a><p class="eyebrow">Learning notes</p><h1>{category}</h1></div><div class="card-grid">{entries.map(entry => <ArticleCard entry={entry} heading="h2"/>)}</div>{!entries.length && <p class="empty-state">まだ記事はありません。</p>}</BaseLayout>

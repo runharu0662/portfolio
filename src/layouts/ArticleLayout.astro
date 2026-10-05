@@ -1,0 +1,9 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import Tag from '../components/Tag.astro';
+import { dateLabel, href } from '../lib/site';
+import type { MarkdownHeading } from 'astro';
+interface Props { title: string; description: string; updated: Date; tags: string[]; category?: string; headings: MarkdownHeading[]; previous?: { title: string; url: string }; next?: { title: string; url: string }; draft?: boolean }
+const { title, description, updated, tags, category, headings, previous, next, draft } = Astro.props;
+---
+<BaseLayout title={title} description={description} type="article"><div class="article-header"><a class="back-link" href={href(category ? 'learning/' : 'projects/')}>← {category ? 'Learning' : 'Projects'}</a><p class="eyebrow">{category || 'Project'}{draft ? ' / Draft' : ''}</p><h1>{title}</h1><p class="intro">{description}</p><div class="article-meta">Updated <time datetime={dateLabel(updated)}>{dateLabel(updated)}</time><div class="tags">{tags.map(label => <Tag label={label}/>)}</div></div></div><div class="article-grid"><article class="prose"><slot/><nav class="article-pagination" aria-label="前後の記事">{previous && <a href={previous.url}><small>← Previous</small>{previous.title}</a>}{next && <a href={next.url}><small>Next →</small>{next.title}</a>}</nav></article>{headings.some(h => h.depth >= 2 && h.depth <= 3) && <aside class="toc"><nav aria-label="目次"><p class="eyebrow">On this page</p><ol>{headings.filter(h => h.depth >= 2 && h.depth <= 3).map(h => <li class:list={{ nested: h.depth === 3 }}><a href={`#${h.slug}`}>{h.text}</a></li>)}</ol></nav></aside>}</div></BaseLayout>

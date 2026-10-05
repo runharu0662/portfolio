@@ -1,0 +1,7 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import { projectEntries } from '../lib/content';
+const projects = await projectEntries();
+---
+<BaseLayout title="Projects"><div class="page-heading"><p class="eyebrow">Build / Experiment / Reflect</p><h1>Projects</h1><p class="intro">制作物と、その設計・実験から学んだこと。</p></div><div class="card-grid">{projects.map(entry => <ProjectCard entry={entry} heading="h2"/>)}</div></BaseLayout>

@@ -1,0 +1,8 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { href, dateLabel } from '../lib/site';
+import Tag from './Tag.astro';
+interface Props { entry: CollectionEntry<'learning'>; heading?: 'h2' | 'h3' }
+const { entry, heading: Heading = 'h3' } = Astro.props;
+---
+<article class="card article-card"><div class="card-meta"><span>{entry.data.category}</span><time datetime={dateLabel(entry.data.updated)}>{dateLabel(entry.data.updated)}</time></div><Heading><a href={href(`learning/${entry.id}/`)}>{entry.data.title} <span aria-hidden="true">↗</span></a></Heading><p>{entry.data.description || '[記事の説明]'}</p><div class="tags">{entry.data.tags.map(label => <Tag label={label}/>)}{entry.data.draft && <Tag label="Draft"/>}</div></article>
