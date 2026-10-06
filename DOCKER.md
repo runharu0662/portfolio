@@ -8,9 +8,11 @@ make dev
 
 Makefile は `docker compose` を優先し、利用できない場合は `docker-compose` を使います。`make dev COMPOSE=docker-compose` のように明示することもできます。
 
-http://localhost:4321/ を開きます。`src` と `public` の編集は自動反映されます。ソースと設定ファイルは読み取り専用でマウントされ、依存パッケージと生成物（`node_modules`・`.astro`・`dist`）はコンテナ内に保存されます。
+http://localhost:4321/ を開きます。`src` と `public` の編集は自動反映されます。`src` は書き込み可能、`public` と設定ファイルは読み取り専用でマウントされ、依存パッケージと生成物（`node_modules`・`.astro`・`dist`）はコンテナ内に保存されます。
 
 Docker 内のファイル監視は300ミリ秒間隔のポーリングを使い、ホスト側の変更通知が届かない環境でも編集を検知します。この設定を既存のコンテナに適用するには、一度 `make dev` でコンテナを再作成してください。その後の記事やスタイルの編集に `make build` は不要です。
+
+新規 MDX 記事を追加した際は、描画用に生成されるインポート一覧も明示的に監視してキャッシュを更新します。`make new` の後は数秒待つと、開発サーバーを再起動せずに新しい記事を表示できます。
 
 停止・コンテナ削除:
 
@@ -34,7 +36,7 @@ make new TITLE="Docker Network" CATEGORY=docker SLUG=docker-network
 make logs
 ```
 
-`make new` は記事をホストに保存するため、このコマンドだけ `src` を書き込み可能にマウントします。`TITLE` は必須、`CATEGORY`・`SLUG` は省略可能です。標準では LinkCard の import を含む `.mdx` 記事を作成します。従来の `.md` を作る場合は `make new TITLE="Docker Network" CATEGORY=docker FORMAT=md` を指定します。同じカテゴリ・slugの `.md` または `.mdx` が存在する場合は作成を拒否します。`make publish MSG="docs: update portfolio"` はホストの Git でコミットとプッシュを実行します。
+`make new` は記事をホストに保存するため、`src` を書き込み可能にマウントします。`TITLE` は必須、`CATEGORY`・`SLUG` は省略可能です。標準では LinkCard の import を含む `.mdx` 記事を作成します。従来の `.md` を作る場合は `make new TITLE="Docker Network" CATEGORY=docker FORMAT=md` を指定します。同じカテゴリ・slugの `.md` または `.mdx` が存在する場合は作成を拒否します。`make publish MSG="docs: update portfolio"` はホストの Git でコミットとプッシュを実行します。
 
 公開先の URL とパスを指定してビルドする場合:
 

@@ -1,0 +1,58 @@
+---
+title: "Portfolio"
+description: "このportfolioを使って、開発環境の仕組みを学んでいく。"
+date: 2026-10-07
+updated: 2026-10-07
+tags: [Docker, Astro, Git, Make, CI/CD]
+repository: "https://github.com/runharu0662/portfolio"
+demo: ""
+featured: true
+---
+
+import LearningArticleLink from '../../components/LearningArticleLink.astro';
+
+## 今後の方針
+
+しばらくは機能を増やすより、今のportfolioの機能をまとめていきます。
+
+## マイルストーン
+
+コードを読む → 試す → 記事にメモする、の順で進めます。自分で説明できたらチェックします。
+
+### 1. 起動の入口
+
+- [ ] <LearningArticleLink id="make/make-dev" label="make devから起動の流れを追う" />：devからComposeに渡るコマンドを追う。
+- [ ] <LearningArticleLink id="docker/image-container-colima" label="イメージ・コンテナ・Colimaの役割" />：イメージと実行中のコンテナを見分ける。
+
+### 2. Dockerの構成
+
+- [ ] <LearningArticleLink id="docker/read-dockerfile" label="Dockerfileを一行ずつ読む" />：ビルド時と起動時の処理を分けて説明する。
+- [ ] <LearningArticleLink id="docker/read-compose" label="Composeの設定と役割を読む" />：DockerfileとComposeの役割の違いを説明する。
+- [ ] <LearningArticleLink id="node/npm-dependencies" label="Node.jsとnpmの依存関係を知る" />：npm ciとlockファイルの関係、scriptsの呼び出しを確認する。
+- [ ] <LearningArticleLink id="docker/basics" label="Dockerの基礎を振り返る" />
+
+### 3. ファイル共有と権限
+
+- [ ] <LearningArticleLink id="docker/container-permissions" label="実行ユーザーと書き込み権限を確かめる" />：検証用ファイルで書き込みの可否を試し、元に戻す。
+- [ ] <LearningArticleLink id="docker/docker-bind-mount" label="bind mountでファイルを共有する" />：ホストとコンテナの両方で編集結果を確認する。
+- [ ] <LearningArticleLink id="make/new-article-command" label="make newの記事生成を追う" />：検証記事で生成内容と重複時の動きを確認する。
+
+### 4. 記事が表示されるまで
+
+- [ ] <LearningArticleLink id="astro/pages-layouts-components" label="ページ・レイアウト・コンポーネントを知る" />：ページを構成するファイルをたどる。
+- [ ] <LearningArticleLink id="astro/content-collections" label="記事データとContent Collectionを読む" />：記事の一覧・並び順・draftの扱いを追う。
+- [ ] <LearningArticleLink id="astro/mdx-article-rendering" label="Markdown・MDXと記事の描画を知る" />：getStaticPathsからrender、記事レイアウトまでを追う。
+- [ ] <LearningArticleLink id="vite/watch-and-reload" label="ファイル監視と再読み込みを確かめる" />：既存記事の編集と新規記事の追加を比べる。
+- [ ] <LearningArticleLink id="docker/docker-astro-new-mdx-error" label="新規MDX記事の表示エラーを振り返る" />：症状・調査・修正の理由を説明する。
+
+### 5. 公開までの流れ
+
+- [ ] <LearningArticleLink id="git/record-changes" label="Gitで変更を記録する" />：差分を読んで、学習した変更を説明する。
+- [ ] <LearningArticleLink id="astro/check-and-build" label="開発サーバーと静的ビルドの違い" />：draftとdistの内容を確認し、コンテナ内の生成物の保存先を知る。
+- [ ] <LearningArticleLink id="ci-cd/github-actions" label="GitHub Actionsの処理を追う" />：依存関係のインストールから成果物の受け渡しまでを追う。
+- [ ] <LearningArticleLink id="ci-cd/github-pages" label="GitHub Pagesの公開URLを理解する" />：ビルドされたページと記事リンクを確認する。
+
+### 6. プロジェクトページをまとめる
+
+- [ ] 構成と役割を自分の言葉で書く。
+- [ ] 各記事へのリンクと、まだ分からないことを整理する。

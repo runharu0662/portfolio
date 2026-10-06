@@ -10,7 +10,7 @@ services:
       CHOKIDAR_USEPOLLING: "true"
       CHOKIDAR_INTERVAL: "300"
     volumes:
-      - ./src:/app/src:ro
+      - ./src:/app/src:rw
       - ./public:/app/public:ro
       - ./astro.config.mjs:/app/astro.config.mjs:ro
       - ./tsconfig.json:/app/tsconfig.json:ro

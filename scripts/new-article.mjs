@@ -9,7 +9,7 @@ if (!slug || !/^[\p{L}\p{N}][\p{L}\p{N}-]*$/u.test(slug)) { console.error('Provi
 const format = (process.env.FORMAT || 'mdx').trim();
 if (!['md', 'mdx'].includes(format)) { console.error('FORMAT must be md or mdx.'); process.exit(1); }
 const folder = category.toLowerCase();
-const names = { aws: 'AWS', docker: 'Docker', go: 'Go', terraform: 'Terraform', 'ci-cd': 'CI/CD' };
+const names = { aws: 'AWS', docker: 'Docker', go: 'Go', terraform: 'Terraform', make: 'Make', node: 'Node.js', astro: 'Astro', vite: 'Vite', git: 'Git', 'ci-cd': 'CI/CD' };
 const label = names[folder] || category[0].toUpperCase() + category.slice(1);
 const now = new Date();
 const date = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;

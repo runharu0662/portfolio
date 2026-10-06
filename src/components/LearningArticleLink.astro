@@ -1,0 +1,10 @@
+---
+import { getEntry } from 'astro:content';
+import { href } from '../lib/site';
+
+interface Props { id: string; label: string }
+const { id, label } = Astro.props;
+const entry = await getEntry('learning', id);
+const visible = entry && (import.meta.env.DEV || !entry.data.draft);
+---
+{visible ? <a href={href(`learning/${entry.id}/`)}>{label}</a> : <span>{label}（準備中）</span>}

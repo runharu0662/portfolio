@@ -1,0 +1,144 @@
+---
+title: "Docker上のAstroで、新規MDX記事だけ表示エラーになった話"
+description: "Macで編集しDockerでAstroを動かす環境で、新規記事が500エラーになる問題を調査。ファイルの共有・変更検知・描画キャッシュの違いを学びました。"
+date: 2026-10-07
+updated: 2026-10-07
+category: "Docker"
+tags: [docker, astro, mdx, bind-mount, vite]
+draft: true
+---
+
+## 起きたこと
+
+このportfolioは、Macでソースを編集し、Dockerコンテナ内でAstroを動かしています。
+既存の記事を編集するとブラウザに反映されるのに、`make new` で新しく作ったMDX記事を開くとエラーになりました。
+
+```sh
+make new TITLE="Docker Network" CATEGORY=docker SLUG=docker-network
+```
+
+ファイルの作成自体は成功していました。問題は、作成した記事を開発サーバーで表示する段階にありました。
+
+## 開発環境
+
+実行環境はColima上のDockerで、今回の調査時に動いていたAstroは `5.18.2` です。
+`src` をbind mountで共有しているため、Mac側で保存した記事をコンテナ内からも読めます。
+
+```yaml
+services:
+  web:
+    environment:
+      CHOKIDAR_USEPOLLING: "true"
+      CHOKIDAR_INTERVAL: "300"
+    volumes:
+      - ./src:/app/src:rw
+```
+
+ファイル監視には300ミリ秒間隔のポーリングを使っています。
+`make new` もDocker内で記事生成スクリプトを実行し、共有した `src` に記事を書き込みます。
+
+## ログから分かったこと
+
+一時的な検証記事を作り、開発サーバーにアクセスして再現を確認しました。
+ログには、新しい記事のデータを読み込んだ記録がありました。
+
+```text
+[glob-loader] Reloaded data from docker/new-article-probe.mdx
+[ERROR] [UnknownContentCollectionError] Unexpected error while rendering → docker/new-article-probe.
+```
+
+新規記事へのリクエストはHTTP 500でした。数秒待って再アクセスしても、エラーは残りました。
+
+このログから、少なくとも次の2点は確認できます。
+
+- コンテナから新規ファイルを読み取れている。
+- Astroのコンテンツローダーは、その追加を検知している。
+
+bind mountや書き込み権限だけを見直しても、今回の描画エラーは解決しませんでした。
+
+## 原因は描画用のインポート一覧だった
+
+この構成では、AstroはMDXの本文を描画するために、生成ファイル `.astro/content-modules.mjs` のインポート一覧を使います。
+記事ページでは、`astro:content` の `render(entry)` を呼び出しています。
+
+```astro
+---
+const { Content, headings } = await render(entry);
+---
+```
+
+調査すると、生成ファイルには新しい記事が追加されていました。
+ところが、開発サーバーの描画に使われるモジュールには古い一覧が残っていました。
+記事データが存在しても、描画用の一覧から新しい記事を引けず、エラーになっていたと考えられます。
+
+既存記事の本文変更と、新しい記事の追加では、更新が必要なものが違います。
+既存記事にはすでに描画用の登録がありますが、新規記事ではその登録も増やす必要がありました。
+
+なお、今回確認したのはこの開発環境での現象です。DockerやAstroを使うすべての環境で発生するか、監視とキャッシュ更新のどの内部処理が根本原因かまでは確認していません。
+
+## 修正したこと
+
+`astro.config.mjs` にViteプラグインを追加し、生成されたインポート一覧を明示的に監視するようにしました。
+ファイルが追加・変更されたら、そのモジュールのキャッシュを無効化してブラウザに再読み込みを通知します。
+
+```js
+import { fileURLToPath } from 'node:url';
+
+function watchContentModules() {
+  return {
+    name: 'watch-content-modules',
+    configureServer(server) {
+      const file = fileURLToPath(
+        new URL('./.astro/content-modules.mjs', import.meta.url)
+      );
+      server.watcher.add(file);
+
+      const onUpdate = (changed) => {
+        if (changed !== file) return;
+        const module = server.moduleGraph.getModuleById(file);
+        if (module) server.moduleGraph.invalidateModule(module);
+        server.ws.send({ type: 'full-reload', path: '*' });
+      };
+
+      server.watcher.on('add', onUpdate);
+      server.watcher.on('change', onUpdate);
+      server.httpServer?.once('close', () => {
+        server.watcher.off('add', onUpdate);
+        server.watcher.off('change', onUpdate);
+      });
+    },
+  };
+}
+```
+
+このプラグインをAstroの設定に登録します。
+
+```js
+vite: { plugins: [watchContentModules()] },
+```
+
+生成先は、このプロジェクトで使っている `.astro` を前提にしています。
+Astroの内部生成ファイルに依存する対応なので、Astroの更新や生成先の変更時には、引き続き必要か確認したいと思います。
+
+## 修正後の確認
+
+既存記事を表示した後に、新しいMDX記事を生成してアクセスしました。
+約2秒待った後、新規記事はHTTP 200で表示され、本文に検証用タイトルが含まれることも確認できました。
+検証用の記事は確認後に削除しました。
+
+さらに、コンテナ内で `npm run build` を実行し、次の結果を確認しました。
+
+- Astroの型チェック：エラー・警告ともに0件。
+- 本番用の静的ビルド：成功。
+
+これで、確認した新規MDX記事は開発サーバーを再起動せずに表示できるようになりました。
+
+## 学んだこと
+
+「ファイルが共有されている」「変更が検知される」「画面に反映される」は、それぞれ別の段階でした。
+今回はファイルの共有と記事データの更新までは動いていて、描画用モジュールの更新で問題が起きていました。
+
+Dockerで開発していると、反映されない問題をまずvolumeや権限の問題として考えがちです。
+実際には、ログを見てどこまで処理が進んでいるかを確認すると、調査する場所を絞れました。
+
+今後も「既存ファイルの編集」だけでなく、「新規ファイルの追加」まで試して、開発環境の反映を確認していきたいです。

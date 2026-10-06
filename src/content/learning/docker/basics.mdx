@@ -1,0 +1,63 @@
+---
+title: Docker Basics
+description: dockerを使った開発環境を整備する
+date: 2026-10-05
+updated: 2026-10-06
+category: Docker
+tags: [Docker, basic, dev]
+draft: false
+---
+
+import LinkCard from '../../../components/LinkCard.astro';
+
+## 方針
+  macOSを最小限の環境にするため、開発環境は以前と同様neovimを使用しつつ、実行環境をdockerにすることにしました。
+  したがって開発にあたってdockerの基礎の学習と開発環境の構成を考えていきます.
+
+## Dockerについて学習したこと
+### colime
+cliでの開発がメインであるため、dockerの実行環境として、GUIを使用する`DockerDesktop`ではなく、`colime`を使用しました。
+dockerはlinux上で動作するため、macOS上でdockerを使用する場合は、dockerの仮想環境を構築する必要があったんですね。
+
+colimeの起動
+```
+colime start
+```
+colimeの停止
+```
+colime stop
+```
+colimeの削除
+```
+colime delete
+```
+
+### Dockerfile
+Dockerimage(コンテナのひな形)の設定ファイルです。Dockerfileを作成することで、コンテナの環境を定義できます。
+
+#### 設定一覧
+
+### DockerCompose
+複数のコンテナをまとめて管理するための設定ファイルです。docker-compose.ymlを作成することで、複数のコンテナをまとめて起動・停止できます。
+
+#### 設定一覧
+
+### Dockerの使用方法
+
+
+
+## 実際作成した環境
+私が今回作成した環境は このportfolioの開発環境です。
+<LinkCard url="https://github.com/runharu0662/portfolio" />
+node.js+vite+astroで記事を編集する構成です。
+
+## 今後の展望
+
+Dockerの構成については以下を進めていくつもりです。
+- 構成：複数サービスをどう分けてつなぐか
+- 権限：rootで動かさない、書き込み範囲をどう絞るか
+- 監視：ログ、healthcheck、異常検知
+- デプロイ：buildしたimageをどこに置いて、どう本番へ運ぶか
+
+## 参考
+<LinkCard url="https://qiita.com/uhooi/items/acb2b044aecd4c7af8f3" />
