@@ -1,0 +1,15 @@
+services:
+  web:
+    build: .
+    ports:
+      - "127.0.0.1:4321:4321"
+    environment:
+      SITE_URL: ${SITE_URL:-http://localhost:4321}
+      BASE_PATH: ${BASE_PATH:-/}
+      ASTRO_TELEMETRY_DISABLED: "1"
+    volumes:
+      - ./src:/app/src:ro
+      - ./public:/app/public:ro
+      - ./astro.config.mjs:/app/astro.config.mjs:ro
+      - ./tsconfig.json:/app/tsconfig.json:ro
+    init: true
