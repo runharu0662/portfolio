@@ -7,6 +7,8 @@ services:
       SITE_URL: ${SITE_URL:-http://localhost:4321}
       BASE_PATH: ${BASE_PATH:-/}
       ASTRO_TELEMETRY_DISABLED: "1"
+      CHOKIDAR_USEPOLLING: "true"
+      CHOKIDAR_INTERVAL: "300"
     volumes:
       - ./src:/app/src:ro
       - ./public:/app/public:ro

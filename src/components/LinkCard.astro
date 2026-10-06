@@ -1,0 +1,63 @@
+---
+import { getOgp, safeHttpUrl } from '../lib/ogp';
+
+interface Props { url: string }
+const { url } = Astro.props;
+const href = safeHttpUrl(url);
+const ogp = href ? await getOgp(href) : null;
+const hostname = href ? new URL(href).hostname : '';
+---
+{ogp && href ? (
+  <a class="link-card" href={href} rel="noopener noreferrer">
+    <span class="link-card-content">
+      <span class="link-card-site">{ogp.siteName || hostname}</span>
+      <span class="link-card-title">{ogp.title}</span>
+      {ogp.description && <span class="link-card-description">{ogp.description}</span>}
+      <span class="link-card-host">{hostname} <span aria-hidden="true">↗</span></span>
+    </span>
+    {ogp.image && <img class="link-card-image" src={ogp.image} alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" />}
+  </a>
+) : href ? (
+  <a class="link-card-fallback" href={href} rel="noopener noreferrer">{url}</a>
+) : (
+  <span class="link-card-fallback">{url}</span>
+)}
+
+<script>
+  function hideFailedImages() {
+    document.querySelectorAll<HTMLImageElement>('.link-card-image').forEach(image => {
+      if (image.complete && image.naturalWidth === 0) image.hidden = true;
+      image.addEventListener('error', () => { image.hidden = true; }, { once: true });
+    });
+  }
+  hideFailedImages();
+  document.addEventListener('astro:page-load', hideFailedImages);
+</script>
+
+<style>
+  a.link-card {
+    display: flex; align-items: stretch; width: 100%; margin: 24px 0;
+    overflow: hidden; border: 1px solid var(--border); border-radius: 8px;
+    background: var(--surface); color: var(--text); text-decoration: none;
+    line-height: 1.5; transition: border-color .15s;
+  }
+  a.link-card:hover { border-color: var(--accent); }
+  .link-card-content { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 8px; padding: 20px; }
+  .link-card-site, .link-card-host { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+  .link-card-title { font-size: 17px; font-weight: 600; color: var(--text); }
+  .link-card-description { font-size: 14px; color: var(--muted); }
+  .link-card-title, .link-card-description {
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+    overflow: hidden; overflow-wrap: anywhere;
+  }
+  .link-card-description { -webkit-line-clamp: 3; }
+  img.link-card-image { width: 28%; max-width: 200px; height: auto; min-height: 150px; object-fit: cover; border-radius: 0; align-self: stretch; }
+  img.link-card-image[hidden] { display: none; }
+  .link-card-fallback { overflow-wrap: anywhere; }
+  @media (max-width: 500px) {
+    a.link-card { flex-direction: column; }
+    .link-card-content { padding: 16px; }
+    img.link-card-image { width: 100%; max-width: none; height: 160px; min-height: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) { a.link-card { transition: none; } }
+</style>
