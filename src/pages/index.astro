@@ -10,7 +10,8 @@ const projects = allProjects.filter(p => p.data.featured);
 const shownProjects = (projects.length ? projects : allProjects).slice(0, 3);
 ---
 <BaseLayout>
-  <section class="hero">
+  <section class="hero profile-hero">
+    <div class="profile-copy">
     <p class="eyebrow">
       <span class="status-dot"></span>
       Portfolio & Learning Notes
@@ -24,6 +25,7 @@ const shownProjects = (projects.length ? projects : allProjects).slice(0, 3);
     </h1>
 
     <p class="intro">
+      情報系の大学生です。<br />
       クラウド・インフラ技術を中心に、
       実際に構築しながら学んだことと制作物を記録しています。
     </p>
@@ -53,6 +55,8 @@ const shownProjects = (projects.length ? projects : allProjects).slice(0, 3);
     <a class="about-link" href={href('about/')}>
       About me <span aria-hidden="true">→</span>
     </a>
+    </div>
+    <img class="profile-image" src={href('images/プロフィール.PNG')} alt="にんじんを抱えたキャラクターのプロフィールイラスト" width="1000" height="1000" fetchpriority="high" />
   </section>
 
   <section class="home-section">
