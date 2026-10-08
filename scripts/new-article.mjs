@@ -15,7 +15,7 @@ const now = new Date();
 const date = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
 const file = path.join('src/content/learning', folder, `${slug}.${format}`);
 const componentImport = format === 'mdx' ? "import LinkCard from '../../../components/LinkCard.astro';\n\n" : '';
-const body = `---\ntitle: ${JSON.stringify(title)}\ndescription: ""\ndate: ${date}\nupdated: ${date}\ncategory: ${JSON.stringify(label)}\ntags: []\ndraft: true\n---\n\n${componentImport}## Overview\n\n[このテーマについて]\n\n## Why\n\n[なぜこれを学ぶのか]\n\n## Understanding\n\n[自分の理解]\n\n## Experiment\n\n[実際に試した内容]\n\n## Commands\n\n\`\`\`bash\n# 実際に使用したコマンド\n\`\`\`\n\n## What I Got Wrong\n\n[最初に誤解していたこと]\n\n## What I Learned\n\n[実験後に理解したこと]\n\n## Questions\n\n[まだ分かっていないこと]\n\n## Next\n\n[次に学ぶ内容]\n`;
+const body = `---\ntitle: ${JSON.stringify(title)}\ndescription: ""\ndate: ${date}\nupdated: ${date}\ncategory: ${JSON.stringify(label)}\ntags: []\ndraft: true\n---\n\n${componentImport}## 確認したいこと\n\n[今回の問いと、読むファイル]\n\n## 自分の理解\n\n[今の予想を自分の言葉で]\n\n## コードと実験\n\n[読んだ箇所・予想・実行結果・理解を直した点]\n\n## 障害対応・残った疑問\n\n[実際に調べた症状・ログ・対処・復旧確認、または未確認の問い]\n`;
 // Both extensions share an article URL; refuse to create a duplicate.
 for (const extension of ['md', 'mdx']) {
   const existing = path.join('src/content/learning', folder, `${slug}.${extension}`);

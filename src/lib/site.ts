@@ -13,4 +13,3 @@ export const categorySlug = (category: string) =>
     .toLowerCase()
     .replace(/[^\p{L}\p{N}]+/gu, "-")
     .replace(/^-|-$/g, "");
-export const initialCategories = ["AWS", "Docker", "Go", "Terraform", "Make", "Node.js", "Astro", "Vite", "Git", "CI/CD"];

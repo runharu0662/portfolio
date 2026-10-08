@@ -1,26 +1,26 @@
 import { defineConfig } from 'astro/config';
 import mdx from '@astrojs/mdx';
 import { fileURLToPath } from 'node:url';
+import { watchFile, unwatchFile } from 'node:fs';
 
-// Deferred MDX imports change when articles are added. Watch the generated map
-// explicitly so polling also invalidates the SSR module cached by Vite.
+// Astro replaces this generated file with an atomic rename. Poll it independently
+// so the SSR import map is refreshed even when Vite misses that replacement.
 function watchContentModules() {
   return {
     name: 'watch-content-modules',
     configureServer(server) {
       const file = fileURLToPath(new URL('./.astro/content-modules.mjs', import.meta.url));
-      server.watcher.add(file);
-      const onUpdate = (changed) => {
-        if (changed !== file) return;
-        const module = server.moduleGraph.getModuleById(file);
-        if (module) server.moduleGraph.invalidateModule(module);
+      const onUpdate = () => {
+        const modules = new Set(server.moduleGraph.getModulesByFile(file) || []);
+        // Astro can initially resolve the map to a virtual module.
+        const virtual = server.moduleGraph.getModuleById('\0astro:content-module-imports');
+        if (virtual) modules.add(virtual);
+        for (const module of modules) server.moduleGraph.invalidateModule(module);
         server.ws.send({ type: 'full-reload', path: '*' });
       };
-      server.watcher.on('add', onUpdate);
-      server.watcher.on('change', onUpdate);
+      watchFile(file, { interval: 100, persistent: false }, onUpdate);
       server.httpServer?.once('close', () => {
-        server.watcher.off('add', onUpdate);
-        server.watcher.off('change', onUpdate);
+        unwatchFile(file, onUpdate);
       });
     },
   };
