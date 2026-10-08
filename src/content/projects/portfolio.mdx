@@ -1,58 +1,158 @@
 ---
 title: "Portfolio"
-description: "このportfolioを使って、開発環境の仕組みを学んでいく。"
+description: "Dockerでの開発、Astroの記事管理、GitHub Pagesへの公開の構成と、そこから得た学びをまとめています。"
 date: 2026-10-07
 updated: 2026-10-07
 tags: [Docker, Astro, Git, Make, CI/CD]
 repository: "https://github.com/runharu0662/portfolio"
 demo: ""
-featured: true
+featured: false
 ---
 
 import LearningArticleLink from '../../components/LearningArticleLink.astro';
 
-## 今後の方針
+## portfolioの作成にあたって
 
-しばらくは機能を増やすより、今のportfolioの機能をまとめていきます。
+理解を放棄しないように作成の過程を記録していこうと思います。
 
-## マイルストーン
+### dockerから
 
-コードを読む → 試す → 記事にメモする、の順で進めます。自分で説明できたらチェックします。
+- node.jsの実行環境を用意するために最小限のDockerfileを作成します。
 
-### 1. 起動の入口
+``` Dockerfile
+FROM node:22-bookworm-slim
 
-- [ ] <LearningArticleLink id="make/make-dev" label="make devから起動の流れを追う" />：devからComposeに渡るコマンドを追う。
-- [ ] <LearningArticleLink id="docker/image-container-colima" label="イメージ・コンテナ・Colimaの役割" />：イメージと実行中のコンテナを見分ける。
+WORKDIR /app
 
-### 2. Dockerの構成
+CMD ["node", "--version"]
+```
+これはmacのディレクトリをコンテナ内部`/app`にコピーして作業ディレクトリとして`node --version`を実行してます。また、コンテナ内部にはlinuxのようなファイル構造があります。
 
-- [ ] <LearningArticleLink id="docker/read-dockerfile" label="Dockerfileを一行ずつ読む" />：ビルド時と起動時の処理を分けて説明する。
-- [ ] <LearningArticleLink id="docker/read-compose" label="Composeの設定と役割を読む" />：DockerfileとComposeの役割の違いを説明する。
-- [ ] <LearningArticleLink id="node/npm-dependencies" label="Node.jsとnpmの依存関係を知る" />：npm ciとlockファイルの関係、scriptsの呼び出しを確認する。
-- [ ] <LearningArticleLink id="docker/basics" label="Dockerの基礎を振り返る" />
+- 次にmac側のソースを使うために`compose.yaml`を作ります
+``` yaml
+services:
+  portfolio:
+    build: .
+    # working_dirはDockerfilesで設定されているのでなくても問題ありません。
+    # 通常compose.yaml側が優先されます。
+    working_dir: /app
+    # volumesでmacのカレントディレクトリとコンテナを共有しています。
+    volumes:
+      - .:/app
+    #コンテナとmacのポートを共有しています。
+    ports:
+      - "4321:4321"
+    command: npm run dev -- --host 0.0.0.0
 
-### 3. ファイル共有と権限
 
-- [ ] <LearningArticleLink id="docker/container-permissions" label="実行ユーザーと書き込み権限を確かめる" />：検証用ファイルで書き込みの可否を試し、元に戻す。
-- [ ] <LearningArticleLink id="docker/docker-bind-mount" label="bind mountでファイルを共有する" />：ホストとコンテナの両方で編集結果を確認する。
-- [ ] <LearningArticleLink id="make/new-article-command" label="make newの記事生成を追う" />：検証記事で生成内容と重複時の動きを確認する。
+```
+### Astro
 
-### 4. 記事が表示されるまで
+#### ひな形の作成
+docker側でnpmの操作をします。
+```shell
+docker compose run --rm portfolio npm init -y
+```
+package.jsonを編集します
+```json
+{
+    "name": "portfolio-new",
+    "version": "1.0.0",
+    // npmへのパッケージ公開を防ぐためにprivateをtrueに
+    "private": true,
+    // javascriptで import/exportを使うためにtypeをmoduleに
+    "type": "module",
+    // コマンドに名前をつける場所
+    "scripts": {
+        "dev": "astro dev",
+    }
+}
+```
+docker側でAstroのひな形を作成します。
+```shell
+docer compose run --rm portfolio npm install astro
+```
+`app/src/pages/index.astro`,`app/src/styles/global.css`を作成し、起動中のコンテナが認識しているか`exec`で確認します。まずdocker-composeでコンテナを起動します。
+```shell
+docker compose up
+```
+```shell
+docker-compose exec portfolio ls -la src/pages
+```
+astroが自動で編集を検知してくれなかったので、`astro.config.mjs`に以下を追記しました。
+```javascript
+  import { defineConfig } from "astro/config";
 
-- [ ] <LearningArticleLink id="astro/pages-layouts-components" label="ページ・レイアウト・コンポーネントを知る" />：ページを構成するファイルをたどる。
-- [ ] <LearningArticleLink id="astro/content-collections" label="記事データとContent Collectionを読む" />：記事の一覧・並び順・draftの扱いを追う。
-- [ ] <LearningArticleLink id="astro/mdx-article-rendering" label="Markdown・MDXと記事の描画を知る" />：getStaticPathsからrender、記事レイアウトまでを追う。
-- [ ] <LearningArticleLink id="vite/watch-and-reload" label="ファイル監視と再読み込みを確かめる" />：既存記事の編集と新規記事の追加を比べる。
-- [ ] <LearningArticleLink id="docker/docker-astro-new-mdx-error" label="新規MDX記事の表示エラーを振り返る" />：症状・調査・修正の理由を説明する。
+  export default defineConfig({
+    vite: {
+      server: {
+        watch: {
+          usePolling: true,
+          interval: 500,
+        },
+      },
+    },
+  });
+```
+この問題についてまとめました。
+[Docker上のAstroで、保存した変更が反映されなかった問題](/learning/docker/astro-file-watch-polling/)
 
-### 5. 公開までの流れ
+今回、Markdownで書いた記事をサイトに表示するために、Astroというフレームワークを使いました。
 
-- [ ] <LearningArticleLink id="git/record-changes" label="Gitで変更を記録する" />：差分を読んで、学習した変更を説明する。
-- [ ] <LearningArticleLink id="astro/check-and-build" label="開発サーバーと静的ビルドの違い" />：draftとdistの内容を確認し、コンテナ内の生成物の保存先を知る。
-- [ ] <LearningArticleLink id="ci-cd/github-actions" label="GitHub Actionsの処理を追う" />：依存関係のインストールから成果物の受け渡しまでを追う。
-- [ ] <LearningArticleLink id="ci-cd/github-pages" label="GitHub Pagesの公開URLを理解する" />：ビルドされたページと記事リンクを確認する。
+  astro:content が提供する getCollection() で記事データを取得し、タイトルや説明を一覧に表示し
+  ます。記事の詳細ページでは、render() でMarkdown本文を表示するためのコンポーネントを取得しま
+  す。
 
-### 6. プロジェクトページをまとめる
+  ページや部品は .astro ファイルに書きます。先頭の --- 内でJavaScriptを使い、HTML内の `{}` で値
+  や式を表示できます。また、HeaderやFooterをコンポーネントとして分け、複数のページで共通の構造
+  を使えることも学びました。
 
-- [ ] 構成と役割を自分の言葉で書く。
-- [ ] 各記事へのリンクと、まだ分からないことを整理する。
+### tips
+
+- 処理する場所：.astro の先頭の --- 内は、開発サーバーやビルド時に実行されます。ブラウザで動
+    かす処理は `<script>` に書きます。
+
+  - URLを作る仕組み：src/pages/ の配置がURLに対応します。記事をコレクションへ追加するだけでは
+    URLはできず、今回の [id].astro と getStaticPaths() が記事ごとのページを作ります。
+
+  - 公開時の動作：今回の構成では、astro build が記事と部品からHTML・CSSなどを生成します。生成
+    物を配信するので、公開先でNode.jsを常時動かす必要はありません。
+
+## CI/CD 
+
+Github actionsを使用します。今回git側ではubuntuでビルドしています。
+`.github/workflows.yml`を作成して完成です。
+```yml
+name : Build portfolio
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+  
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+```
+
+- <LearningArticleLink id="docker/basics" label="Dockerで開発環境を用意する" />
+- <LearningArticleLink id="docker/docker-astro-new-mdx-error" label="ファイル共有・変更検知・描画更新を分けて調べる" />
