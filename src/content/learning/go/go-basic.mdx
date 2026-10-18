@@ -1,0 +1,79 @@
+---
+title: "go basic"
+description: "goについて基礎から学習していきます"
+date: 2026-10-16
+updated: 2026-10-16
+category: "Go"
+tags: [go, programming, basics]
+draft: false
+---
+
+import LinkCard from '../../../components/LinkCard.astro';
+
+## 今回の記事
+
+<LinkCard url="https://zenn.dev/ngicks/articles/go-basics-earned-through-years-of-practice-part1" />
+<LinkCard url="https://go.dev/tour/welcome/1" />
+
+
+## 環境構築
+
+Dockerで公式イメージを使用しGoの実行環境を構築します。
+
+compose.yaml
+```yaml
+    services:
+        go:
+            image: golang:1.27-bookworm
+            working_dir: /app
+            volumes:
+                - .:/app
+                - go-cache:/go/pkg/mod
+                - build-cache:/root/.cache/go-build
+            stdin_open: true
+            tty: true
+            command: selep infinity
+
+    volumes:
+        go-cache:
+        build-cache:
+
+```
+`docker-compose up -d`でコンテナを起動します。練習ではこのようにして実行します。
+```bash
+docker-compose exec go go run ./tour/01-hello.go
+```
+
+### つまったこと
+
+dockerの作業ディレクトリは/appでホストのカレントディレクトリをマウントしているので、ホスト側でディレクトリを移動してもコンテナ側の作業ディレクトリは変わらないことに注意が必要です(1敗)。
+
+## Tour of Goを進めよう
+
+### 
+環境構築がおわったので、学習を記録していきます。
+- time.Now()を使って現在時刻を表示するサンプルコードです。
+- タイムゾーンは基本的にUTCで表示されます。compose.yamlで環境変数を設定することで変更可能です。
+``` yaml
+
+    environment:
+      TZ: Asia/Tokyo
+```
+
+``` go
+package main
+
+import (
+    "fmt"
+    "time"
+)
+
+func main() {
+    fmt.Println("Welcome to the playground!")
+    fmt.Println("The time is", time.Now())
+}
+```
+定義ジャンプを使ってみると、かなり感動しました。Goのコードはシンプルで読みやすいので、定義ジャンプがかなり便利に感じます。
+
+
+
