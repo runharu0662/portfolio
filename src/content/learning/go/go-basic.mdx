@@ -2,7 +2,7 @@
 title: "go basic"
 description: "goについて基礎から学習していきます"
 date: 2026-10-16
-updated: 2026-10-16
+updated: 2026-10-19
 category: "Go"
 tags: [go, programming, basics]
 draft: false
@@ -32,7 +32,7 @@ compose.yaml
                 - build-cache:/root/.cache/go-build
             stdin_open: true
             tty: true
-            command: selep infinity
+            command: sleep infinity
 
     volumes:
         go-cache:
@@ -44,15 +44,14 @@ compose.yaml
 docker-compose exec go go run ./tour/01-hello.go
 ```
 
-### つまったこと
+#### つまったこと
 
 dockerの作業ディレクトリは/appでホストのカレントディレクトリをマウントしているので、ホスト側でディレクトリを移動してもコンテナ側の作業ディレクトリは変わらないことに注意が必要です(1敗)。
 
 ## Tour of Goを進めよう
 
-### 
 環境構築がおわったので、学習を記録していきます。
-- time.Now()を使って現在時刻を表示するサンプルコードです。
+
 - タイムゾーンは基本的にUTCで表示されます。compose.yamlで環境変数を設定することで変更可能です。
 ``` yaml
 
@@ -60,7 +59,23 @@ dockerの作業ディレクトリは/appでホストのカレントディレク�
       TZ: Asia/Tokyo
 ```
 
-``` go
+定義ジャンプを使ってみると、かなり感動しました。Goのコードはシンプルで読みやすいので、定義ジャンプがかなり便利に感じます。
+
+### Goプログラムの基本的なコンポーネント
+
+#### packages
+goはプログラムがパッケージで構成されているので、`main`パッケージからよみこまれ、パッケージ内部の関数を`パッケージ名.関数名()`という形で使用できます。
+
+たとえば、
+```go
+fmt.Println("Hello")
+```
+これは`fmt`パッケージの`Println()`関数をよびだしています。
+
+
+#### Imports
+- time.Now()を使って現在時刻を表示するサンプルコードです。
+```go
 package main
 
 import (
@@ -73,7 +88,164 @@ func main() {
     fmt.Println("The time is", time.Now())
 }
 ```
-定義ジャンプを使ってみると、かなり感動しました。Goのコードはシンプルで読みやすいので、定義ジャンプがかなり便利に感じます。
+`import`は別のパッケージを利用するための宣言です。
 
+#### 変数の定義
+`var`ステートメントで変数を定義します。
+Goでは変数名の後ろに型を書きます。Goは基本的に名前->型の順番で宣言します。
+```go
+var x int
+```
+また、var宣言では初期化子をあたえることができます。とくに指定がない場合、型ごとのゼロ値で初期化されます（整数は`0`、boolは`false`、stringは`""`）。
+```go
+var i, j int = 1, 2
+```
+`関数の中`では`var`宣言のかわりに`:=`の代入文を使い、暗黙的な宣言をでき、型は推論されます。
+関数の中でしか使用できない点に注意です。
 
+```go
+package main
 
+import "fmt"
+
+func main() {
+	var i, j int = 1, 2
+	k := 3
+	c, python, java := true, false, "no!"
+
+	fmt.Println(i, j, k, c, python, java)
+}
+
+```
+#### 変数の型
+変数の型は次のように表現されます。
+| 分類 | 型 | 用途 |
+|---|---|---|
+| 真偽値 | `bool` | `true` / `false` |
+| 文字列 | `string` | 文字列 |
+| 整数 | `int`, `int8`, `int16`, `int32`, `int64` | 符号付き整数 |
+| 符号なし整数 | `uint`, `uint8`, `uint16`, `uint32`, `uint64` | 0以上の整数 |
+| 浮動小数点数 | `float32`, `float64` | 小数 |
+| 複素数 | `complex64`, `complex128` | 複素数 |
+| 文字・バイト | `rune`, `byte` | Unicodeコードポイント・バイト |
+| ポインタ関連 | `uintptr` | ポインタ値を整数として表す特殊な型 |
+
+- intは環境によって、32bitや64bitと変わるので注意が必要です。
+- `byte`はバイナリデータをあつかいます。
+- `rune`はUnicodeコードポイントを表すので文字をあつかうとき便利です。
+- 変数宣言はまとめることができます。
+```go
+var (
+count int
+name  string
+ready bool
+)
+```
+
+#### 型変換
+
+GoはC言語とはことなり、Goでの型変換は明示的な変換が必要です。
+```go
+var i int = 42
+var f float64 = float64(i)
+var u uint = uint(f)
+```
+次のように省略することもできます。
+``` go
+i := 42
+f := float64(i)
+u := uint(f)
+```
+
+#### 型推論
+明示的な型を指定せずに変数を宣言する場合( := や var = のいずれか)、変数の型は右側の変数から型推論されます。
+```go
+i := 42           // int
+f := 3.142        // float64
+g := 0.867 + 0.5i // complex128
+```
+
+#### 変数の公開
+
+先頭が大文字の変数は他のパッケージで使用することができます。
+
+```go
+package hoge
+var count int = 10 // 非公開
+var Count int = 10 // 公開
+```
+``` go
+package main
+
+import (
+    "fmt"
+    "example.com/myapp/hoge"
+    //github.comからももってこれるというわけ
+)
+
+func main (){
+    fmt.Println(hoge.Count)
+}
+```
+
+とはいえ使用するのは数学的な定数など既存の値がほとんどなので存在だけおさえておくことにします。
+
+#### 定数
+`const`宣言で定義します。定数は文字、文字列、boolean、数値のみで定義できます。定数は`:=`を使用して宣言できません。
+
+Goの型なし定数は、通常の整数型の範囲を超えた計算もでき、使用する場面で適切な型として扱われる
+``` go
+package main
+import "fmt"
+
+const (
+    //intをはるかに超えている
+	Big   = 1 << 100
+    //演算もできる
+	Small = Big >> 99
+)
+
+func needInt(x int) int { return x*10 + 1 }
+func needFloat(x float64) float64 {
+	return x * 0.1
+}
+
+func main() {
+	fmt.Println(needInt(Small))
+	fmt.Println(needFloat(Small))
+	fmt.Println(needFloat(Big))
+}
+```
+
+#### 関数のかきかた
+引数の変数を一括で定義できます。また変数と同様関数も返り値を後ろで定義します。
+``` go
+func add(x, y int) int {
+return x + y
+}
+```
+また、戻り値がない場合宣言を省略できます。
+``` go
+func greet(name string)  {
+    fmt.Println("Hello",name)
+}
+```
+複数の戻り値を返すこともできます。
+```go
+func swap(x, y string) (string, string) {
+	return y, x
+}
+```
+
+#### Named return values
+Goでは、関数の戻り値の名前も宣言時に定義できます。そうするとreturnだけで戻り値を返却できる`naked return`がありますが、おおきな関数だと可読性がおちることに注意です。
+```go
+func split(sum int) (x, y int) {
+	x = sum * 4 / 9
+	y = sum - x
+	return
+}
+```
+#### 
+
+### 条件分岐とループ
